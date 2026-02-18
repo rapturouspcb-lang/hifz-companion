@@ -1,0 +1,34 @@
+{
+  "name": "hifz-companion",
+  "version": "1.0.0",
+  "description": "Production-grade Quran memorization companion for Huffaz",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "start": "npm run start --workspace=backend",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "quran",
+    "hifz",
+    "memorization",
+    "islamic",
+    "mutashabihat"
+  ],
+  "author": "Hifz Companion Team",
+  "license": "MIT"
+}
