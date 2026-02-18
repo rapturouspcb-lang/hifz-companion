@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core Quran Tables
+
+model Surah {
+  id             Int      @id
+  nameArabic     String   @map("name_arabic")
+  nameEnglish    String   @map("name_english")
+  nameUrdu       String?  @map("name_urdu")
+  revelationType String   @map("revelation_type") // Meccan or Medinan
+  ayahCount      Int      @map("ayah_count")
+  pageStart      Int      @map("page_start")
+  pageEnd        Int      @map("page_end")
+  juzList        Int[]    @map("juz_list")
+
+  ayahs          Ayah[]
+  progress       UserProgress[]
+
+  @@map("surahs")
+}
+
+model Ayah {
+  id               BigInt   @id
+  surahId          Int      @map("surah_id")
+  ayahNumber       Int      @map("ayah_number")
+  pageNumber       Int      @map("page_number")
+  juzNumber        Int      @map("juz_number")
+  hizbNumber       Int      @map("hizb_number")
+  textArabic       String   @map("text_arabic") @db.Text
+  textArabicSimple String   @map("text_arabic_simple") @db.Text
+  textUrdu         String?  @map("text_urdu") @db.Text
+  textEnglish      String?  @map("text_english") @db.Text
+  wordCount        Int?     @map("word_count")
+
+  surah            Surah    @relation(fields: [surahId], references: [id])
+  mutashabihat1    Mutashabihat[] @relation("Ayah1")
+  mutashabihat2    Mutashabihat[] @relation("Ayah2")
+  mistakes         Mistake[]
+  bookmarks        Bookmark[]
+
+  @@unique([surahId, ayahNumber])
+  @@index([pageNumber])
+  @@index([juzNumber])
+  @@index([hizbNumber])
+  @@map("ayahs")
+}
+
+model Mutashabihat {
+  id             Int     @id @default(autoincrement())
+  ayahId1        BigInt  @map("ayah_id_1")
+  ayahId2        BigInt  @map("ayah_id_2")
+  similarityScore Decimal @map("similarity_score") @db.Decimal(3, 2)
+  similarityType String  @map("similarity_type") // exact_repeat, near_repeat, thematic, structural
+  diffData       Json?   @map("diff_data")
+
+  ayah1          Ayah    @relation("Ayah1", fields: [ayahId1], references: [id])
+  ayah2          Ayah    @relation("Ayah2", fields: [ayahId2], references: [id])
+
+  @@unique([ayahId1, ayahId2])
+  @@index([ayahId1])
+  @@index([ayahId2])
+  @@index([similarityScore])
+  @@map("mutashabihat")
+}
+
+// User Tables
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  displayName  String?  @map("display_name")
+  createdAt    DateTime @default(now()) @map("created_at")
+  settings     Json     @default("{}")
+
+  progress        UserProgress[]
+  revisionSessions RevisionSession[]
+  mistakes        Mistake[]
+  bookmarks       Bookmark[]
+  streak          DailyStreak?
+
+  @@map("users")
+}
+
+model UserProgress {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  surahId             Int      @map("surah_id")
+  memorizationStatus  String   @default("not_started") @map("memorization_status")
+  masteryLevel        Int      @default(0) @map("mastery_level")
+  lastRevisedAt       DateTime? @map("last_revised_at")
+  revisionCount       Int      @default(0) @map("revision_count")
+  mistakeCount        Int      @default(0) @map("mistake_count")
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  surah               Surah    @relation(fields: [surahId], references: [id])
+
+  @@unique([userId, surahId])
+  @@map("user_progress")
+}
+
+model RevisionSession {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  startedAt      DateTime  @default(now()) @map("started_at")
+  endedAt        DateTime? @map("ended_at")
+  revisionType   String    @map("revision_type")
+  surahIds       Int[]     @map("surah_ids")
+  pagesCovered   Decimal?  @map("pages_covered") @db.Decimal(4, 1)
+  mistakesLogged Int       @default(0) @map("mistakes_logged")
+
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mistakes       Mistake[]
+
+  @@index([userId])
+  @@index([startedAt])
+  @@map("revision_sessions")
+}
+
+model Mistake {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  ayahId      BigInt    @map("ayah_id")
+  sessionId   String?   @map("session_id")
+  mistakeType String    @map("mistake_type")
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ayah        Ayah             @relation(fields: [ayahId], references: [id])
+  session     RevisionSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([ayahId])
+  @@index([createdAt])
+  @@map("mistakes")
+}
+
+model Bookmark {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  ayahId       BigInt   @map("ayah_id")
+  bookmarkType String   @default("general") @map("bookmark_type")
+  note         String?
+  color        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ayah         Ayah     @relation(fields: [ayahId], references: [id])
+
+  @@unique([userId, ayahId])
+  @@map("bookmarks")
+}
+
+model DailyStreak {
+  id                String   @id @default(uuid())
+  userId            String   @unique @map("user_id")
+  currentStreak     Int      @default(0) @map("current_streak")
+  longestStreak     Int      @default(0) @map("longest_streak")
+  lastActivityDate  DateTime? @map("last_activity_date")
+  updatedAt         DateTime @default(now()) @map("updated_at")
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("daily_streaks")
+}
