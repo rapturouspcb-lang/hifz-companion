@@ -12,6 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:seed": "tsx src/scripts/seed.ts",
+    "db:seed-full": "tsx src/scripts/seed-full-quran.ts",
     "db:mutashabihat": "tsx src/scripts/compute-mutashabihat.ts"
   },
   "dependencies": {
