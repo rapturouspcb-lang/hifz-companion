@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
 }
 
 // Core Quran Tables
@@ -18,7 +18,7 @@ model Surah {
   ayahCount      Int     @map("ayah_count")
   pageStart      Int     @map("page_start")
   pageEnd        Int     @map("page_end")
-  juzList        String  @map("juz_list") // JSON array stored as string
+  juzList        Int[]   @map("juz_list")
 
   ayahs    Ayah[]
   progress UserProgress[]

@@ -8,18 +8,18 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const surahsData = [
-  { id: 1, nameArabic: "الفاتحة", nameEnglish: "Al-Fatihah", nameUrdu: "الفاتحہ", revelationType: "Meccan", ayahCount: 7, pageStart: 1, pageEnd: 1, juzList: "[1]" },
-  { id: 2, nameArabic: "البقرة", nameEnglish: "Al-Baqarah", nameUrdu: "البقرہ", revelationType: "Medinan", ayahCount: 286, pageStart: 2, pageEnd: 49, juzList: "[1,2,3]" },
-  { id: 3, nameArabic: "آل عمران", nameEnglish: "Aal-Imran", nameUrdu: "آل عمران", revelationType: "Medinan", ayahCount: 200, pageStart: 50, pageEnd: 76, juzList: "[3,4]" },
-  { id: 4, nameArabic: "النساء", nameEnglish: "An-Nisa", nameUrdu: "النساء", revelationType: "Medinan", ayahCount: 176, pageStart: 77, pageEnd: 106, juzList: "[4,5,6]" },
-  { id: 5, nameArabic: "المائدة", nameEnglish: "Al-Ma'idah", nameUrdu: "المائدہ", revelationType: "Medinan", ayahCount: 120, pageStart: 106, pageEnd: 127, juzList: "[6,7]" },
-  { id: 36, nameArabic: "يس", nameEnglish: "Ya-Sin", nameUrdu: "یس", revelationType: "Meccan", ayahCount: 83, pageStart: 440, pageEnd: 445, juzList: "[22,23]" },
-  { id: 55, nameArabic: "الرحمن", nameEnglish: "Ar-Rahman", nameUrdu: "الرحمن", revelationType: "Medinan", ayahCount: 78, pageStart: 531, pageEnd: 534, juzList: "[27]" },
-  { id: 56, nameArabic: "الواقعة", nameEnglish: "Al-Waqi'ah", nameUrdu: "الواقعہ", revelationType: "Meccan", ayahCount: 96, pageStart: 534, pageEnd: 537, juzList: "[27]" },
-  { id: 67, nameArabic: "الملك", nameEnglish: "Al-Mulk", nameUrdu: "الملک", revelationType: "Meccan", ayahCount: 30, pageStart: 562, pageEnd: 564, juzList: "[29]" },
-  { id: 112, nameArabic: "الإخلاص", nameEnglish: "Al-Ikhlas", nameUrdu: "الاخلاص", revelationType: "Meccan", ayahCount: 4, pageStart: 604, pageEnd: 604, juzList: "[30]" },
-  { id: 113, nameArabic: "الفلق", nameEnglish: "Al-Falaq", nameUrdu: "الفلق", revelationType: "Meccan", ayahCount: 5, pageStart: 604, pageEnd: 604, juzList: "[30]" },
-  { id: 114, nameArabic: "الناس", nameEnglish: "An-Nas", nameUrdu: "الناس", revelationType: "Meccan", ayahCount: 6, pageStart: 604, pageEnd: 604, juzList: "[30]" },
+  { id: 1, nameArabic: "الفاتحة", nameEnglish: "Al-Fatihah", nameUrdu: "الفاتحہ", revelationType: "Meccan", ayahCount: 7, pageStart: 1, pageEnd: 1, juzList: [1] },
+  { id: 2, nameArabic: "البقرة", nameEnglish: "Al-Baqarah", nameUrdu: "البقرہ", revelationType: "Medinan", ayahCount: 286, pageStart: 2, pageEnd: 49, juzList: [1, 2, 3] },
+  { id: 3, nameArabic: "آل عمران", nameEnglish: "Aal-Imran", nameUrdu: "آل عمران", revelationType: "Medinan", ayahCount: 200, pageStart: 50, pageEnd: 76, juzList: [3, 4] },
+  { id: 4, nameArabic: "النساء", nameEnglish: "An-Nisa", nameUrdu: "النساء", revelationType: "Medinan", ayahCount: 176, pageStart: 77, pageEnd: 106, juzList: [4, 5, 6] },
+  { id: 5, nameArabic: "المائدة", nameEnglish: "Al-Ma'idah", nameUrdu: "المائدہ", revelationType: "Medinan", ayahCount: 120, pageStart: 106, pageEnd: 127, juzList: [6, 7] },
+  { id: 36, nameArabic: "يس", nameEnglish: "Ya-Sin", nameUrdu: "یس", revelationType: "Meccan", ayahCount: 83, pageStart: 440, pageEnd: 445, juzList: [22, 23] },
+  { id: 55, nameArabic: "الرحمن", nameEnglish: "Ar-Rahman", nameUrdu: "الرحمن", revelationType: "Medinan", ayahCount: 78, pageStart: 531, pageEnd: 534, juzList: [27] },
+  { id: 56, nameArabic: "الواقعة", nameEnglish: "Al-Waqi'ah", nameUrdu: "الواقعہ", revelationType: "Meccan", ayahCount: 96, pageStart: 534, pageEnd: 537, juzList: [27] },
+  { id: 67, nameArabic: "الملك", nameEnglish: "Al-Mulk", nameUrdu: "الملک", revelationType: "Meccan", ayahCount: 30, pageStart: 562, pageEnd: 564, juzList: [29] },
+  { id: 112, nameArabic: "الإخلاص", nameEnglish: "Al-Ikhlas", nameUrdu: "الاخلاص", revelationType: "Meccan", ayahCount: 4, pageStart: 604, pageEnd: 604, juzList: [30] },
+  { id: 113, nameArabic: "الفلق", nameEnglish: "Al-Falaq", nameUrdu: "الفلق", revelationType: "Meccan", ayahCount: 5, pageStart: 604, pageEnd: 604, juzList: [30] },
+  { id: 114, nameArabic: "الناس", nameEnglish: "An-Nas", nameUrdu: "الناس", revelationType: "Meccan", ayahCount: 6, pageStart: 604, pageEnd: 604, juzList: [30] },
 ];
 
 const sampleAyahs = [
