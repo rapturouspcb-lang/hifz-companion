@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import QuranService from '../services/quran.service.js';
-import { NotFoundError } from '../middleware/errorHandler.js';
+import QuranService, { PaginationParams } from '../services/quran.service.js';
+import { NotFoundError, ValidationError } from '../middleware/errorHandler.js';
 
 export class QuranController {
   private quranService: QuranService;
@@ -9,12 +9,37 @@ export class QuranController {
     this.quranService = new QuranService();
   }
 
+  private getPaginationParams(req: Request): PaginationParams {
+    const page = parseInt(req.query.page as string, 10);
+    const limit = parseInt(req.query.limit as string, 10);
+
+    if (isNaN(page) && req.query.page) {
+      throw new ValidationError('Invalid page parameter');
+    }
+    if (isNaN(limit) && req.query.limit) {
+      throw new ValidationError('Invalid limit parameter');
+    }
+    if (page < 1) {
+      throw new ValidationError('Page must be greater than 0');
+    }
+    if (limit < 1 || limit > 100) {
+      throw new ValidationError('Limit must be between 1 and 100');
+    }
+
+    return {
+      page: page || undefined,
+      limit: limit || undefined
+    };
+  }
+
   getAllSurahs = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const surahs = await this.quranService.getAllSurahs();
+      const params = this.getPaginationParams(req);
+      const result = await this.quranService.getAllSurahs(params);
       res.json({
         status: 'success',
-        data: { surahs, count: surahs.length }
+        data: result.data,
+        pagination: result.pagination
       });
     } catch (error) {
       next(error);
@@ -24,6 +49,10 @@ export class QuranController {
   getSurahById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = parseInt(req.params.id, 10);
+      if (isNaN(id) || id < 1 || id > 114) {
+        throw new ValidationError('Surah ID must be between 1 and 114');
+      }
+
       const surah = await this.quranService.getSurahById(id);
 
       if (!surah) {
@@ -39,23 +68,28 @@ export class QuranController {
   getSurahAyahs = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const surahId = parseInt(req.params.id, 10);
+      if (isNaN(surahId) || surahId < 1 || surahId > 114) {
+        throw new ValidationError('Surah ID must be between 1 and 114');
+      }
+
+      const params = this.getPaginationParams(req);
       const includeTranslation = req.query.translation === 'true';
 
-      const ayahs = await this.quranService.getSurahAyahs(surahId);
+      const result = await this.quranService.getSurahAyahs(surahId, params);
 
       res.json({
         status: 'success',
         data: {
           surahId,
-          ayahs: includeTranslation ? ayahs : ayahs.map(a => ({
+          ayahs: includeTranslation ? result.data : result.data.map(a => ({
             id: a.id,
             ayahNumber: a.ayahNumber,
             textArabic: a.textArabic,
             pageNumber: a.pageNumber,
             juzNumber: a.juzNumber
-          })),
-          count: ayahs.length
-        }
+          }))
+        },
+        pagination: result.pagination
       });
     } catch (error) {
       next(error);

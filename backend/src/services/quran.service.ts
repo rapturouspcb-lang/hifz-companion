@@ -2,11 +2,49 @@ import { PrismaClient, Surah, Ayah } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
 export class QuranService {
-  async getAllSurahs(): Promise<Surah[]> {
-    return prisma.surah.findMany({
-      orderBy: { id: 'asc' }
-    });
+  async getAllSurahs(params: PaginationParams = {}): Promise<PaginatedResult<Surah>> {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 114; // Default to all surahs
+    const skip = (page - 1) * limit;
+
+    const [surahs, total] = await Promise.all([
+      prisma.surah.findMany({
+        orderBy: { id: 'asc' },
+        skip,
+        take: limit
+      }),
+      prisma.surah.count()
+    ]);
+
+    return {
+      data: surahs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+        hasPrev: page > 1
+      }
+    };
   }
 
   async getSurahById(id: number): Promise<Surah | null> {
@@ -15,11 +53,32 @@ export class QuranService {
     });
   }
 
-  async getSurahAyahs(surahId: number): Promise<Ayah[]> {
-    return prisma.ayah.findMany({
-      where: { surahId },
-      orderBy: { ayahNumber: 'asc' }
-    });
+  async getSurahAyahs(surahId: number, params: PaginationParams = {}): Promise<PaginatedResult<Ayah>> {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 50;
+    const skip = (page - 1) * limit;
+
+    const [ayahs, total] = await Promise.all([
+      prisma.ayah.findMany({
+        where: { surahId },
+        orderBy: { ayahNumber: 'asc' },
+        skip,
+        take: limit
+      }),
+      prisma.ayah.count({ where: { surahId } })
+    ]);
+
+    return {
+      data: ayahs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+        hasPrev: page > 1
+      }
+    };
   }
 
   async getAyahById(id: number): Promise<Ayah | null> {
