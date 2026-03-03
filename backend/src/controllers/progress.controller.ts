@@ -30,6 +30,11 @@ export class ProgressController {
       const totalMemorized = surahProgress.filter(s => s.memorizationStatus === 'completed').length;
       const inProgress = surahProgress.filter(s => s.memorizationStatus === 'in_progress').length;
 
+      const parsedSessions = recentSessions.map(s => ({
+        ...s,
+        surahIds: JSON.parse(s.surahIds || '[]')
+      }));
+
       res.json({
         status: 'success',
         data: {
@@ -40,7 +45,7 @@ export class ProgressController {
           },
           streak: streak || { currentStreak: 0, longestStreak: 0 },
           recentMistakes,
-          recentSessions
+          recentSessions: parsedSessions
         }
       });
     } catch (error) {
@@ -102,11 +107,17 @@ export class ProgressController {
         data: {
           userId,
           revisionType,
-          surahIds: surahIds || []
+          surahIds: JSON.stringify(surahIds || [])
         }
       });
 
-      res.status(201).json({ status: 'success', data: session });
+      res.status(201).json({
+        status: 'success',
+        data: {
+          ...session,
+          surahIds: JSON.parse(session.surahIds)
+        }
+      });
     } catch (error) {
       next(error);
     }
@@ -150,7 +161,12 @@ export class ProgressController {
         skip: parseInt(offset as string, 10)
       });
 
-      res.json({ status: 'success', data: sessions });
+      const parsedSessions = sessions.map(s => ({
+        ...s,
+        surahIds: JSON.parse(s.surahIds || '[]')
+      }));
+
+      res.json({ status: 'success', data: parsedSessions });
     } catch (error) {
       next(error);
     }
