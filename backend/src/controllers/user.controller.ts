@@ -29,19 +29,21 @@ export class UserController {
 
       const passwordHash = await bcrypt.hash(password, 12);
 
+      const defaultSettings = {
+        defaultReciter: 'abdul_basit_murattal',
+        showTranslation: true,
+        translationLanguage: 'urdu',
+        mushafLayout: '13_line',
+        fontSize: 'medium',
+        theme: 'light'
+      };
+
       const user = await prisma.user.create({
         data: {
           email,
           passwordHash,
           displayName: displayName || null,
-          settings: {
-            defaultReciter: 'abdul_basit_murattal',
-            showTranslation: true,
-            translationLanguage: 'urdu',
-            mushafLayout: '13_line',
-            fontSize: 'medium',
-            theme: 'light'
-          }
+          settings: JSON.stringify(defaultSettings)
         }
       });
 
@@ -123,7 +125,7 @@ export class UserController {
         throw new AuthenticationError('User not found');
       }
 
-      res.json({ status: 'success', data: user });
+      res.json({ status: 'success', data: { ...user, settings: JSON.parse(user.settings || '{}') } });
     } catch (error) {
       next(error);
     }
@@ -145,7 +147,7 @@ export class UserController {
         }
       });
 
-      res.json({ status: 'success', data: user });
+      res.json({ status: 'success', data: { ...user, settings: JSON.parse(user.settings || '{}') } });
     } catch (error) {
       next(error);
     }
@@ -158,11 +160,11 @@ export class UserController {
 
       const user = await prisma.user.update({
         where: { id: authReq.user!.id },
-        data: { settings },
+        data: { settings: JSON.stringify(settings) },
         select: { id: true, settings: true }
       });
 
-      res.json({ status: 'success', data: user.settings });
+      res.json({ status: 'success', data: JSON.parse(user.settings || '{}') });
     } catch (error) {
       next(error);
     }

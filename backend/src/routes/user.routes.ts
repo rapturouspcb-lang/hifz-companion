@@ -8,14 +8,13 @@ const userController = new UserController();
 // Auth routes
 router.post('/register', userController.register);
 router.post('/login', userController.login);
-router.post('/logout', userController.logout);
 
-// Password Reset routes (#10)
+// Password Reset routes
 router.post('/password-reset/request', userController.requestPasswordReset);
 router.post('/password-reset/confirm', userController.resetPassword);
 
-// Email Verification routes (#11)
-router.post('/verify-email/request', optionalAuth, userController.requestEmailVerification);
+// Email Verification routes
+router.post('/verify-email/request', optionalAuth, userController.resendVerification);
 router.post('/verify-email/confirm', userController.verifyEmail);
 
 // Protected routes
