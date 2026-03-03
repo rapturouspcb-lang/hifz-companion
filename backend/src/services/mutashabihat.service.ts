@@ -51,10 +51,10 @@ export class MutashabihatService {
       ORDER BY "similarityScore" DESC
     `;
 
-    return results.map(r => ({
+    return results.map((r: any) => ({
       ayahId: r.ayahId,
       similarAyah: {
-        id: Number(r.similarAyahId || r.similarAyah),
+        id: Number(r.similarAyahId),
         surahId: Number(r.surahId),
         ayahNumber: r.ayahNumber,
         textArabic: r.textArabic,

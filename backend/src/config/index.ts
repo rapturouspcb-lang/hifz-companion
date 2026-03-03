@@ -1,9 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 export const config = {
   env: process.env.NODE_ENV || 'development',
@@ -25,6 +23,6 @@ export const config = {
 
   corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
 
-  audioStoragePath: process.env.AUDIO_STORAGE_PATH || path.resolve(__dirname, '../../storage/audio'),
+  audioStoragePath: process.env.AUDIO_STORAGE_PATH || path.resolve(process.cwd(), 'storage/audio'),
   audioBaseUrl: process.env.AUDIO_BASE_URL || 'http://localhost:3001/audio'
 };

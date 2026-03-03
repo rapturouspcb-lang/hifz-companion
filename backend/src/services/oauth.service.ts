@@ -107,9 +107,8 @@ export class OAuthController {
   };
 
   private generateToken(userId: string, email: string): string {
-    return jwt.sign({ id: userId, email }, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn,
-    });
+    const options: jwt.SignOptions = { expiresIn: '7d' };
+    return jwt.sign({ id: userId, email }, config.jwt.secret, options);
   }
 }
 

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
-import { NotFoundError, from '../middleware/errorHandler.js';
+import { NotFoundError } from '../middleware/errorHandler.js';
 
 const prisma = new PrismaClient();
 
@@ -40,7 +40,7 @@ export class AudioService {
     try {
       const { ayahId } = req.params;
       const { reciter } = req.query;
-      const quality = = (req.query.quality as string) || '128';
+      const quality = (req.query.quality as string) || '128';
 
       const reciterConfig = this.reciters.find(r => r.id === reciter);
       if (!reciterConfig) {

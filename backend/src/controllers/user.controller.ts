@@ -204,10 +204,11 @@ export class UserController {
   };
 
   private generateToken(userId: string, email: string): string {
+    const options: jwt.SignOptions = { expiresIn: '7d' };
     return jwt.sign(
       { id: userId, email },
       config.jwt.secret,
-      { expiresIn: config.jwt.expiresIn }
+      options
     );
   }
 
