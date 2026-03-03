@@ -19,6 +19,10 @@ router.put('/surahs/:surahId', progressController.updateSurahProgress);
 router.post('/revision/start', progressController.startRevisionSession);
 router.post('/revision/:sessionId/end', progressController.endRevisionSession);
 router.get('/revision/history', progressController.getRevisionHistory);
+router.get('/revision/plan', progressController.getRevisionPlan);
+
+// Spaced repetition
+router.get('/spaced-repetition', progressController.getSpacedRepetitionQueue);
 
 // Mistakes
 router.post('/mistakes', progressController.logMistake);
