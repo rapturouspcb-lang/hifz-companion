@@ -1,12 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { config } from '../config/index.js';
 import { AuthenticationError, ValidationError } from '../middleware/errorHandler.js';
 import { AuthRequest } from '../middleware/auth.js';
 
 const prisma = new PrismaClient();
+
+// Token generation utilities
+const generateVerificationToken = () => crypto.randomBytes(32).toString('hex');
+const generateResetToken = () => crypto.randomBytes(32).toString('hex');
 
 export class UserController {
   register = async (req: Request, res: Response, next: NextFunction) => {
@@ -203,6 +208,170 @@ export class UserController {
       { expiresIn: config.jwt.expiresIn }
     );
   }
+
+  // Password Reset Flow (#10)
+  requestPasswordReset = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        throw new ValidationError('Email is required');
+      }
+
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        // Don't reveal if user exists or not for security
+        res.json({
+          status: 'success',
+          message: 'If an account with that email exists, a reset link has been sent.',
+        });
+        return;
+      }
+
+      const resetToken = generateResetToken();
+      const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          resetToken,
+          resetTokenExpires,
+        },
+      });
+
+      // In production, send email with reset link
+      // For now, return the token for testing
+      res.json({
+        status: 'success',
+        message: 'Password reset link has been sent to your email',
+        // Remove this in production:
+        ...(process.env.NODE_ENV === 'development' && { resetToken }),
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        throw new ValidationError('Token and new password are required');
+      }
+
+      if (newPassword.length < 8) {
+        throw new ValidationError('Password must be at least 8 characters');
+      }
+
+      const user = await prisma.user.findFirst({
+        where: {
+          resetToken: token,
+          resetTokenExpires: { gt: new Date() },
+        },
+      });
+
+      if (!user) {
+        throw new AuthenticationError('Invalid or expired reset token');
+      }
+
+      const passwordHash = await bcrypt.hash(newPassword, 12);
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          passwordHash,
+          resetToken: null,
+          resetTokenExpires: null,
+        },
+      });
+
+      res.json({
+        status: 'success',
+        message: 'Password has been reset successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Email Verification (#11)
+  verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token } = req.body;
+
+      if (!token) {
+        throw new ValidationError('Verification token is required');
+      }
+
+      const user = await prisma.user.findFirst({
+        where: {
+          verificationToken: token,
+          verificationExpires: { gt: new Date() },
+        },
+      });
+
+      if (!user) {
+        throw new AuthenticationError('Invalid or expired verification token');
+      }
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: true,
+          verificationToken: null,
+          verificationExpires: null,
+        },
+      });
+
+      res.json({
+        status: 'success',
+        message: 'Email verified successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  resendVerification = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.id;
+
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        throw new AuthenticationError('User not found');
+      }
+
+      if (user.emailVerified) {
+        res.json({
+          status: 'success',
+          message: 'Email is already verified',
+        });
+        return;
+      }
+
+      const verificationToken = generateVerificationToken();
+      const verificationExpires = new Date(Date.now() + 86400000); // 24 hours
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          verificationToken,
+          verificationExpires,
+        },
+      });
+
+      // In production, send verification email
+      res.json({
+        status: 'success',
+        message: 'Verification email has been sent',
+        // Remove this in production:
+        ...(process.env.NODE_ENV === 'development' && { verificationToken }),
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default UserController;

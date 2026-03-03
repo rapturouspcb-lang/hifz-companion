@@ -358,6 +358,109 @@ export class ProgressController {
     }
   };
 
+  // Daily Revision Planner (#12)
+  getRevisionPlan = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const authReq = req as AuthRequest;
+      const userId = authReq.user!.id;
+
+      const progress = await prisma.userProgress.findMany({
+        where: { userId }
+      });
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const sabaq = progress
+        .filter(p => p.memorizationStatus === 'completed')
+        .filter(p => {
+          const lastRevised = p.lastRevisedAt ? new Date(p.lastRevisedAt) : null;
+          if (!lastRevised) return true;
+          const daysDiff = Math.floor((today.getTime() - lastRevised.getTime()) / (1000 * 60 * 60 * 24));
+          return daysDiff <= 7;
+        });
+
+      const sabaqPara = progress
+        .filter(p => p.memorizationStatus === 'completed')
+        .filter(p => {
+          const lastRevised = p.lastRevisedAt ? new Date(p.lastRevisedAt) : null;
+          if (!lastRevised) return false;
+          const daysDiff = Math.floor((today.getTime() - lastRevised.getTime()) / (1000 * 60 * 60 * 24));
+          return daysDiff > 7 && daysDiff <= 30;
+        });
+
+      const manzil = progress
+        .filter(p => p.memorizationStatus === 'completed')
+        .filter(p => {
+          const lastRevised = p.lastRevisedAt ? new Date(p.lastRevisedAt) : null;
+          if (!lastRevised) return false;
+          const daysDiff = Math.floor((today.getTime() - lastRevised.getTime()) / (1000 * 60 * 60 * 24));
+          return daysDiff > 30;
+        });
+
+      const weakSurahs = progress.filter(p => p.mistakeCount >= 2);
+
+      res.json({
+        status: 'success',
+        data: {
+          sabaq: sabaq.map(s => s.surahId),
+          sabaqPara: sabaqPara.map(s => s.surahId),
+          manzil: manzil.map(s => s.surahId),
+          weakSurahs: weakSurahs.map(s => ({ surahId: s.surahId, mistakeCount: s.mistakeCount }))
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Spaced Repetition System (#13)
+  getSpacedRepetitionQueue = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const authReq = req as AuthRequest;
+      const userId = authReq.user!.id;
+
+      const progress = await prisma.userProgress.findMany({
+        where: {
+          userId,
+          memorizationStatus: 'completed'
+        },
+        orderBy: { lastRevisedAt: 'asc' }
+      });
+
+      const today = new Date();
+      const intervals = [1, 3, 7, 14, 30, 60, 90];
+
+      const dueForReview = progress.filter(p => {
+        if (!p.lastRevisedAt) return true;
+
+        const lastRevised = new Date(p.lastRevisedAt);
+        const daysSinceReview = Math.floor((today.getTime() - lastRevised.getTime()) / (1000 * 60 * 60 * 24));
+
+        const intervalIndex = Math.min(p.revisionCount, intervals.length - 1);
+        const nextReviewDays = intervals[intervalIndex];
+
+        return daysSinceReview >= nextReviewDays;
+      });
+
+      res.json({
+        status: 'success',
+        data: {
+          dueToday: dueForReview.map(p => ({
+            surahId: p.surahId,
+            daysOverdue: p.lastRevisedAt
+              ? Math.floor((today.getTime() - new Date(p.lastRevisedAt).getTime()) / (1000 * 60 * 60 * 24))
+              : 0,
+            revisionCount: p.revisionCount,
+            masteryLevel: p.masteryLevel
+          }))
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   private updateStreak = async (userId: string) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
