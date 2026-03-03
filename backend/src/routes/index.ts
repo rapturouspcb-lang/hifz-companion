@@ -5,6 +5,7 @@ import searchRoutes from './search.routes.js';
 import audioRoutes from './audio.routes.js';
 import userRoutes from './user.routes.js';
 import progressRoutes from './progress.routes.js';
+import analyticsRoutes from './analytics.routes.js';
 
 const router = Router();
 
@@ -19,7 +20,8 @@ router.get('/', (req, res) => {
       search: '/search',
       audio: '/audio',
       users: '/users',
-      progress: '/progress'
+      progress: '/progress',
+      analytics: '/analytics'
     }
   });
 });
@@ -30,5 +32,6 @@ router.use('/search', searchRoutes);
 router.use('/audio', audioRoutes);
 router.use('/users', userRoutes);
 router.use('/progress', progressRoutes);
+router.use('/analytics', analyticsRoutes);
 
 export default router;
