@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useRef, useEffect } from 'react';
 import {
   Book,
   Search,
@@ -12,10 +12,13 @@ import {
   X,
   Moon,
   Sun,
-  User
+  User,
+  LogOut,
+  Settings
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/authStore';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -30,8 +33,30 @@ const navItems = [
 
 export function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    setUserMenuOpen(false);
+    router.push('/');
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -84,12 +109,51 @@ export function MainLayout({ children }: MainLayoutProps) {
               </button>
 
               {/* User Menu */}
-              <Link
-                href="/auth/login"
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                <User className="w-5 h-5" />
-              </Link>
+              {isAuthenticated && user ? (
+                <div className="relative" ref={userMenuRef}>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                      <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
+                        {user.displayName?.[0] || user.email[0].toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {user.displayName || 'User'}
+                    </span>
+                  </button>
+
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                      <Link
+                        href="/settings"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Settings
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">Sign In</span>
+                </Link>
+              )}
 
               {/* Mobile Menu Button */}
               <button
