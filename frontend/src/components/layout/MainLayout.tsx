@@ -19,6 +19,7 @@ import {
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
+import { MobileNav } from './MobileNav';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -198,12 +199,12 @@ export function MainLayout({ children }: MainLayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1">
+      <main className="flex-1 pb-16 md:pb-0">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-8">
+      <footer className="hidden md:block bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-center md:text-left">
@@ -219,6 +220,9 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
         </div>
       </footer>
+
+      {/* Mobile Navigation */}
+      <MobileNav />
     </div>
   );
 }
