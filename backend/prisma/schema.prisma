@@ -71,12 +71,17 @@ model Mutashabihat {
 // User Tables
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  displayName  String?  @map("display_name")
-  createdAt    DateTime @default(now()) @map("created_at")
-  settings     String   @default("{}") // JSON stored as string
+  id                    String    @id @default(uuid())
+  email                String    @unique
+  passwordHash         String    @map("password_hash")
+  displayName          String?   @map("display_name")
+  emailVerified        Boolean  @default(false) @map("email_verified")
+  verificationToken     String?  @map("verification_token")
+  verificationExpires  DateTime? @map("verification_expires")
+  resetToken           String?  @map("reset_token")
+  resetTokenExpires    DateTime? @map("reset_token_expires")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  settings             String    @default("{}") // JSON stored as string
 
   progress         UserProgress[]
   revisionSessions RevisionSession[]

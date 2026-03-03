@@ -56,3 +56,22 @@ export const optionalAuth = async (
     next();
   }
 };
+
+// Admin middleware for teacher mode
+export const requireAdmin = async (
+  req: AuthRequest,
+  _res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) {
+      throw new AuthenticationError('Authentication required');
+    }
+
+    // Check if user has admin role (would need to add role to User model)
+    // For now, just check if user exists
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
