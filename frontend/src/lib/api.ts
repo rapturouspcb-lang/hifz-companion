@@ -98,4 +98,6 @@ export const progressApi = {
   getBookmarks: () => api.get('/progress/bookmarks'),
   addBookmark: (data: any) => api.post('/progress/bookmarks', data),
   removeBookmark: (ayahId: number) => api.delete(`/progress/bookmarks/${ayahId}`),
+  getRevisionPlan: () => api.get('/progress/revision/plan'),
+  getSpacedRepetitionQueue: () => api.get('/progress/spaced-repetition'),
 };
