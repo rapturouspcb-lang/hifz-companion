@@ -77,7 +77,11 @@ export const userApi = {
   login: (data: { email: string; password: string }) =>
     api.post('/users/login', data),
   getProfile: () => api.get('/users/me'),
+  updateProfile: (data: { displayName?: string }) =>
+    api.put('/users/me', data),
   updateSettings: (settings: any) => api.put('/users/me/settings', { settings }),
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    api.put('/users/me/password', data),
 };
 
 export const progressApi = {
